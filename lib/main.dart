@@ -15,7 +15,8 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Image Picker Demo',
-      home: MyHomePage(title: 'Image Picker Example'),
+      debugShowCheckedModeBanner: false,
+      home: MyHomePage(title: 'Image Picker'),
     );
   }
 }
@@ -66,24 +67,16 @@ class _MyHomePageState extends State<MyHomePage> {
           source: source, maxDuration: const Duration(seconds: 10));
       await _playVideo(file);
     } else {
-      await _displayPickImageDialog(context,
-          (double maxWidth, double maxHeight, int quality) async {
-        try {
-          final pickedFile = await _picker.getImage(
-            source: source,
-            maxWidth: maxWidth,
-            maxHeight: maxHeight,
-            imageQuality: quality,
-          );
-          setState(() {
-            _imageFile = pickedFile;
-          });
-        } catch (e) {
-          setState(() {
-            _pickImageError = e;
-          });
-        }
-      });
+      try {
+        final pickedFile = await _picker.getImage(source: source);
+        setState(() {
+          _imageFile = pickedFile;
+        });
+      } catch (e) {
+        setState(() {
+          _pickImageError = e;
+        });
+      }
     }
   }
 
@@ -180,6 +173,7 @@ class _MyHomePageState extends State<MyHomePage> {
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.title),
+        backgroundColor: Colors.deepOrange,
       ),
       body: Center(
         child: !kIsWeb && defaultTargetPlatform == TargetPlatform.android
@@ -274,62 +268,6 @@ class _MyHomePageState extends State<MyHomePage> {
       return result;
     }
     return null;
-  }
-
-  Future<void> _displayPickImageDialog(
-      BuildContext context, OnPickImageCallback onPick) async {
-    return showDialog(
-        context: context,
-        builder: (context) {
-          return AlertDialog(
-            title: Text('Add optional parameters'),
-            content: Column(
-              children: <Widget>[
-                TextField(
-                  controller: maxWidthController,
-                  keyboardType: TextInputType.numberWithOptions(decimal: true),
-                  decoration:
-                      InputDecoration(hintText: "Enter maxWidth if desired"),
-                ),
-                TextField(
-                  controller: maxHeightController,
-                  keyboardType: TextInputType.numberWithOptions(decimal: true),
-                  decoration:
-                      InputDecoration(hintText: "Enter maxHeight if desired"),
-                ),
-                TextField(
-                  controller: qualityController,
-                  keyboardType: TextInputType.number,
-                  decoration:
-                      InputDecoration(hintText: "Enter quality if desired"),
-                ),
-              ],
-            ),
-            actions: <Widget>[
-              FlatButton(
-                child: const Text('CANCEL'),
-                onPressed: () {
-                  Navigator.of(context).pop();
-                },
-              ),
-              FlatButton(
-                  child: const Text('PICK'),
-                  onPressed: () {
-                    double width = maxWidthController.text.isNotEmpty
-                        ? double.parse(maxWidthController.text)
-                        : null;
-                    double height = maxHeightController.text.isNotEmpty
-                        ? double.parse(maxHeightController.text)
-                        : null;
-                    int quality = qualityController.text.isNotEmpty
-                        ? int.parse(qualityController.text)
-                        : null;
-                    onPick(width, height, quality);
-                    Navigator.of(context).pop();
-                  }),
-            ],
-          );
-        });
   }
 }
 
